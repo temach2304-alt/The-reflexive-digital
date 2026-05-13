@@ -42,11 +42,20 @@ def register():
             flash('Пользователь с таким именем уже существует', 'error')
             return render_template('register.html')
         
+        # Для учеников получаем данные РЦП
+        rcp_name = None
+        rcp_avatar = None
+        if role == 'user':
+            rcp_name = request.form.get('rcp_name')
+            rcp_avatar = request.form.get('rcp_avatar')
+        
         # Создание нового пользователя
         user = User(
             username=username,
             password_hash=generate_password_hash(password),
-            role=role
+            role=role,
+            rcp_name=rcp_name,
+            rcp_avatar=rcp_avatar
         )
         
         db.session.add(user)
