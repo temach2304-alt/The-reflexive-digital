@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Мои сессии - РЦП{% endblock %}
+
+{% block content %}
+<h1 style="color: white; margin-bottom: 2rem;">📚 Мои учебные сессии</h1>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+    {% for session in sessions %}
+        <div class="card">
+            <h3 style="margin-bottom: 0.75rem; color: #667eea;">{{ session.title }}</h3>
+            
+            <p style="color: #666; margin-bottom: 1rem;">{{ session.description or 'Описание отсутствует' }}</p>
+            
+            {% set progress = session_progress.get(session.id) %}
+            
+            {% if progress %}
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <strong>Ваш прогресс:</strong><br>
+                    Задание {{ progress.current_task_index + 1 }} из {{ progress.total_tasks }}<br>
+                    <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="background: {% if progress.status == 'completed' %}#28a745{% else %}#667eea{% endif %}; 
+                            width: {{ (progress.current_task_index / progress.total_tasks * 100) if progress.total_tasks > 0 else 0 }}%; 
+                            height: 100%; transition: width 0.3s;"></div>
+                    </div>
+                    <small style="color: #666;">
+                        Статус: 
+                        {% if progress.status == 'completed' %}
+                            <span style="color: green;">✓ Завершено</span>
+                        {% else %}
+                            <span style="color: orange;">⏳ В процессе</span>
+                        {% endif %}
+                    </small>
+                </div>
+                
+                {% if progress.status != 'completed' %}
+                    <a href="{{ url_for('user.chat_session', session_id=session.id) }}" class="btn btn-primary" style="width: 100%;">Продолжить</a>
+                {% else %}
+                    <a href="{{ url_for('user.session_complete', session_id=session.id) }}" class="btn btn-success" style="width: 100%;">Посмотреть результаты</a>
+                {% endif %}
+            {% else %}
+                <form method="POST" action="{{ url_for('user.start_session', session_id=session.id) }}">
+                    <button type="submit" class="btn btn-success" style="width: 100%;">Начать сессию</button>
+                </form>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="card" style="grid-column: 1 / -1; text-align: center;">
+            <p style="color: #666; font-size: 1.1rem;">В настоящее время нет доступных сессий</p>
+            <p style="color: #999;">Обратитесь к модератору для получения доступа к новым материалам</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Сессия завершена - РЦП{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 700px; margin: 2rem auto; text-align: center;">
+    <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+    
+    <h2 style="color: #28a745; margin-bottom: 1rem;">Поздравляем!</h2>
+    <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+        Вы успешно завершили сессию "{{ session.title }}"
+    </p>
+    
+    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Ваши результаты</h3>
+        <p><strong>Всего заданий:</strong> {{ progress.total_tasks }}</p>
+        <p><strong>Выполнено:</strong> {{ progress.completed_tasks }}</p>
+        <p><strong>Начато:</strong> {{ progress.started_at.strftime('%d.%m.%Y %H:%M') }}</p>
+        <p><strong>Завершено:</strong> {{ progress.completed_at.strftime('%d.%m.%Y %H:%M') if progress.completed_at else 'Не завершено' }}</p>
+    </div>
+    
+    <div style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">История диалога</h3>
+        <div style="max-height: 400px; overflow-y: auto; text-align: left;">
+            {% for message in chat_history %}
+                <div style="padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 8px; 
+                    {% if message.message_type == 'user_query' %}
+                        background: #e3f2fd; border-left: 4px solid #2196f3;
+                    {% else %}
+                        background: #f3e5f5; border-left: 4px solid #9c27b0;
+                    {% endif %}">
+                    
+                    <small style="color: #666;">
+                        {% if message.message_type == 'user_query' %}👤 Вы{% else %}🤖 РЦП{% endif %}
+                        | {{ message.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                    </small>
+                    <div style="white-space: pre-wrap; color: #333; margin-top: 0.25rem; font-size: 0.9rem;">{{ message.content }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+        <a href="{{ url_for('user.dashboard') }}" class="btn btn-primary">К моим сессиям</a>
+        <a href="{{ url_for('user.history') }}" class="btn btn-secondary">Вся история</a>
+    </div>
+</div>
+{% endblock %}

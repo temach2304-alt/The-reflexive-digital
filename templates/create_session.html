@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Создание сессии - РЦП{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 2rem auto;">
+    <h2 style="margin-bottom: 1.5rem; color: #667eea;">📚 Создание новой сессии</h2>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="title">Название сессии</label>
+            <input type="text" id="title" name="title" class="form-control" required placeholder="Например: Развитие рефлексии через анализ ситуации">
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Описание</label>
+            <textarea id="description" name="description" class="form-control" placeholder="Краткое описание целей и задач сессии"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="context">Контекст сессии (из методических материалов)</label>
+            <textarea id="context" name="context" class="form-control" style="min-height: 200px;" placeholder="Основной контекст, теоретическая база, рекомендации для педагога"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="task_list">Список диалоговых заданий (JSON формат)</label>
+            <textarea id="task_list" name="task_list" class="form-control" style="min-height: 300px; font-family: monospace;" required placeholder='[
+  {
+    "description": "Опишите ситуацию, которая вызвала у вас сильные эмоции",
+    "goal": "Идентификация эмоционально значимой ситуации"
+  },
+  {
+    "description": "Какие мысли возникли у вас в момент этой ситуации?",
+    "goal": "Анализ автоматических мыслей"
+  },
+  {
+    "description": "Как вы отреагировали на эту ситуацию?",
+    "goal": "Осознание поведенческих реакций"
+  }
+]'></textarea>
+            <small style="color: #666; display: block; margin-top: 0.5rem;">
+                Формат: массив объектов с полями "description" (описание задания) и "goal" (цель задания)
+            </small>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-success">Создать сессию</button>
+            <a href="{{ url_for('moderator.dashboard') }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

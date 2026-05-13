@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Страница не найдена{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 3rem auto; text-align: center;">
+    <h1 style="font-size: 4rem; color: #667eea; margin-bottom: 1rem;">404</h1>
+    <h2 style="margin-bottom: 1rem;">Страница не найдена</h2>
+    <p style="color: #666; margin-bottom: 2rem;">
+        Извините, запрашиваемая страница не существует или была перемещена.
+    </p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">На главную</a>
+</div>
+{% endblock %}
