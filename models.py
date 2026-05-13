@@ -13,10 +13,6 @@ class User(UserMixin, db.Model):
     status = db.Column(db.String(50), default='active')  # active, inactive, blocked
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Поля для РЦП (Рефлексивная Цифровая Персона) - только для учеников
-    rcp_name = db.Column(db.String(100))  # Имя РЦП, которое выбирает ученик
-    rcp_avatar = db.Column(db.String(255))  # Выбранный аватар для РЦП
-    
     # Связи
     sessions = db.relationship('Session', backref='user', lazy='dynamic')
     chat_history = db.relationship('ChatMessage', backref='user', lazy='dynamic')

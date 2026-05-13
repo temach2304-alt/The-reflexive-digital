@@ -118,10 +118,6 @@ def send_message(session_id):
     if not user_message:
         return jsonify({'error': 'Сообщение не может быть пустым'}), 400
     
-    # Получаем данные РЦП пользователя
-    user_rcp_name = current_user.rcp_name or "Помощник"
-    user_rcp_avatar = current_user.rcp_avatar or "🦉"
-    
     # Сохранение сообщения пользователя
     user_msg = ChatMessage(
         user_id=current_user.id,
@@ -142,9 +138,7 @@ def send_message(session_id):
             session_id=session_id,
             user_message=user_message,
             current_task=current_task,
-            task_index=progress.current_task_index,
-            user_rcp_name=user_rcp_name,
-            user_rcp_avatar=user_rcp_avatar
+            task_index=progress.current_task_index
         )
         
         # Сохранение ответа ИИ
@@ -175,10 +169,6 @@ def send_message(session_id):
             'progress': {
                 'current': progress.current_task_index,
                 'total': len(task_list)
-            },
-            'rcp_info': {
-                'name': user_rcp_name,
-                'avatar': user_rcp_avatar
             }
         })
         

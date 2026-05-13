@@ -156,9 +156,7 @@ def get_ai_response(
     session_id: int,
     user_message: str,
     current_task: Dict,
-    task_index: int,
-    user_rcp_name: str = "Помощник",
-    user_rcp_avatar: str = "🦉"
+    task_index: int
 ) -> Dict:
     """
     Генерация ответа ИИ-агента на сообщение пользователя
@@ -169,8 +167,6 @@ def get_ai_response(
         user_message: Сообщение от пользователя
         current_task: Текущее задание
         task_index: Индекс текущего задания
-        user_rcp_name: Имя РЦП, выбранное пользователем
-        user_rcp_avatar: Аватар РЦП, выбранный пользователем
     
     Returns:
         Словарь с ответом и метаданными
@@ -196,18 +192,12 @@ def get_ai_response(
         'task_index': task_index
     })
     
-    # Добавляем индекс текущего задания в задачу для генерации объяснений
-    current_task_with_index = current_task.copy()
-    current_task_with_index['index'] = task_index
-    
     # Генерация ответа (здесь должна быть интеграция с LLM)
     response = generate_reflective_response(
         user_message=user_message,
-        current_task=current_task_with_index,
+        current_task=current_task,
         conversation_history=session_data['conversation_history'],
-        context=session_data.get('context', ''),
-        user_rcp_name=user_rcp_name,
-        user_rcp_avatar=user_rcp_avatar
+        context=session_data.get('context', '')
     )
     
     # Добавление ответа ИИ в историю
@@ -232,9 +222,7 @@ def generate_reflective_response(
     user_message: str,
     current_task: Dict,
     conversation_history: List[Dict],
-    context: str,
-    user_rcp_name: str = "Помощник",
-    user_rcp_avatar: str = "🦉"
+    context: str
 ) -> Dict:
     """
     Генерация рефлексивного ответа на основе задачи и истории диалога
@@ -261,139 +249,47 @@ def generate_reflective_response(
     # Простая эвристика для определения завершенности задания
     task_completed = response_length > 50  # Минимальная длина ответа
     
-    # Получение предыдущих ответов для контекста
-    previous_user_messages = [
-        msg['content'] for msg in conversation_history 
-        if msg['role'] == 'user' and msg.get('task_index', 0) < current_task.get('index', 0)
-    ]
-    
-    # Генерация ответа в зависимости от глубины размышлений
+    # Генерация ответа
     if response_length < 20:
-        response_text = f"""{user_rcp_avatar} Привет! Я вижу, что твой ответ довольно краткий. 
+        response_text = f"""Я вижу, что ваш ответ довольно краткий. 
+Для развития рефлексии важно подробнее раскрыть свои мысли. 
 
-Знаешь, для развития рефлексии важно подробнее раскрыть свои мысли. Не переживай, если сразу сложно — давай попробуем вместе!
+Попробуйте ответить на вопрос: 
+- Что именно вы почувствовали в этой ситуации?
+- Какие мысли у вас возникли?
+- Как это связано с вашим предыдущим опытом?
 
-Подумай над этими вопросами:
-• Что именно ты почувствовал в этой ситуации?
-• Какие мысли у тебя возникли?
-• Как это связано с твоим предыдущим опытом?
-
-Я здесь, чтобы помочь тебе разобраться. Попробуй ответить подробнее на: {task_description}"""
+{task_description}"""
         reflection_depth = 'shallow'
         task_completed = False
     
     elif response_length < 100:
-        response_text = f"""{user_rcp_avatar} Спасибо за твой ответ! Ты затронул важные моменты, и это здорово!
+        response_text = f"""Спасибо за ваш ответ! Вы затронули важные моменты.
 
-Давай углубимся ещё немного:
-• Почему ты считаешь это важным?
-• Как это влияет на твоё понимание ситуации?
-• Какие альтернативные точки зрения ты можешь рассмотреть?
+Давайте углубимся еще немного:
+- Почему вы считаете это важным?
+- Как это влияет на ваше понимание ситуации?
+- Какие альтернативные точки зрения вы можете рассмотреть?
 
-Ты уже хорошо двигаешься вперёд! Продолжай размышлять над: {task_goal}
-
-Я верю в тебя! 💪"""
+Продолжайте размышлять над: {task_goal}"""
         reflection_depth = 'moderate'
         task_completed = False
     
     else:
-        # Более глубокий анализ для длинных ответов
-        feedback = generate_specific_feedback(user_message, task_goal)
-        
-        if task_completed:
-            # Переход к следующему заданию с объяснением
-            next_task_explanation = generate_next_task_explanation(
-                user_message, 
-                current_task, 
-                previous_user_messages,
-                conversation_history
-            )
-            
-            response_text = f"""{user_rcp_avatar} Отличная работа! Твой ответ показывает глубокое размышление. 👏
+        response_text = f"""Отличная работа! Ваш ответ показывает глубокое размышление.
 
-Ты хорошо проанализировал ситуацию, отметив важные аспекты.
-{feedback}
+Вы хорошо проанализировали ситуацию, отметив важные аспекты.
+{generate_specific_feedback(user_message, task_goal)}
 
-{next_task_explanation}
-
-Переходим к следующему шагу! Ты молодец, что так внимательно относишься к своим размышлениям! 🌟"""
-        else:
-            response_text = f"""{user_rcp_avatar} Отличный ответ! Видно, что ты серьёзно подошёл к размышлению.
-
-{feedback}
-
-Продолжай в том же духе! У тебя получается замечательно! 💫"""
-        
+{'Переходим к следующему заданию!' if task_completed else 'Продолжайте в том же духе!'}"""
         reflection_depth = 'deep'
-        task_completed = task_completed
+        task_completed = True
     
     return {
         'text': response_text,
         'task_completed': task_completed,
         'reflection_depth': reflection_depth
     }
-
-
-def generate_next_task_explanation(
-    user_message: str,
-    current_task: Dict,
-    previous_user_messages: List[str],
-    conversation_history: List[Dict]
-) -> str:
-    """
-    Генерация объяснения, зачем нужно следующее задание
-    и как оно связано с текущим прогрессом ученика
-    """
-    
-    task_index = current_task.get('index', 0)
-    
-    # Анализируем, какие темы затронул ученик
-    themes_identified = []
-    if any(word in user_message.lower() for word in ['чувств', 'эмоци', 'пережив']):
-        themes_identified.append('эмоции')
-    if any(word in user_message.lower() for word in ['причин', 'потому', 'объясн']):
-        themes_identified.append('причинно-следственные связи')
-    if any(word in user_message.lower() for word in ['опыт', 'прошл', 'воспом']):
-        themes_identified.append('прошлый опыт')
-    if any(word in user_message.lower() for word in ['будущ', 'план', 'цел']):
-        themes_identified.append('планирование')
-    
-    # Создаём персонализированное объяснение
-    explanations = {
-        0: f"""📚 **Зачем нужно следующее задание?**
-
-Ты здорово начал! В следующем задании мы углубимся в тему ещё больше. Это поможет тебе:
-• Лучше понять свои реакции и мысли
-• Найти связи между разными аспектами ситуации
-• Развить навык самоанализа
-
-Каждый шаг важен для твоего роста!""",
-        
-        1: f"""🎯 **Почему мы переходим к следующему этапу?**
-
-Отлично, что ты уже поразмышлял над первыми вопросами! Следующее задание поможет тебе:
-• Применить то, что ты осознал на первом этапе
-• Посмотреть на ситуацию с новой точки зрения
-• Обнаружить новые инсайты о себе
-
-{'Ты затронул тему ' + ', '.join(themes_identified) + ' — это очень важно!' if themes_identified else ''}""",
-        
-        2: f"""💡 **Что даст тебе следующее задание?**
-
-Ты уже проделал большую работу! Следующий этап поможет:
-• Закрепить полученные инсайты
-• Связать всё в единую картину
-• Подготовиться к практическому применению
-
-{'Особенно ценно, что ты отметил ' + ', '.join(themes_identified) + '.' if themes_identified else ''}
-Это показывает твой глубокий подход!"""
-    }
-    
-    return explanations.get(task_index, f"""✨ **Новый этап!**
-
-Ты успешно справился с предыдущим заданием! Следующее поможет тебе развить эти навыки ещё больше.
-
-Помни: каждый шаг — это возможность узнать себя лучше!""")
 
 
 def generate_specific_feedback(user_message: str, task_goal: str) -> str:
@@ -408,11 +304,11 @@ def generate_specific_feedback(user_message: str, task_goal: str) -> str:
     found_keywords = [kw for kw in reflection_keywords if kw in user_message.lower()]
     
     if len(found_keywords) >= 3:
-        return f"Ты использовал рефлексивные формулировки ({', '.join(found_keywords[:3])}), это показывает глубокий уровень самоанализа. Так держать! 🌟"
+        return f"Вы использовали рефлексивные формулировки ({', '.join(found_keywords[:3])}), что показывает глубокий уровень самоанализа."
     elif len(found_keywords) >= 1:
-        return f"Здорово, что ты отмечаешь такие аспекты как '{found_keywords[0]}'. Это помогает развивать рефлексию и лучше понимать себя! 💡"
+        return f"Хорошо, что вы отмечаете такие аспекты как '{found_keywords[0]}'. Это помогает развивать рефлексию."
     else:
-        return "Попробуй использовать больше рефлексивных формулировок: 'я думаю', 'я чувствую', 'я понимаю'. Это поможет тебе глубже погрузиться в тему! ✨"
+        return "Попробуйте использовать больше рефлексивных формулировок: 'я думаю', 'я чувствую', 'я понимаю'."
 
 
 def get_conversation_summary(user_id: int, session_id: int) -> Dict:

@@ -3,10 +3,10 @@
 {% block title %}Регистрация - РЦП{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 500px; margin: 3rem auto;">
+<div class="card" style="max-width: 400px; margin: 3rem auto;">
     <h2 style="text-align: center; margin-bottom: 1.5rem; color: #667eea;">🧠 Регистрация</h2>
     
-    <form method="POST" id="registerForm">
+    <form method="POST">
         <div class="form-group">
             <label for="username">Имя пользователя</label>
             <input type="text" id="username" name="username" class="form-control" required autofocus>
@@ -19,118 +19,17 @@
         
         <div class="form-group">
             <label for="role">Тип аккаунта</label>
-            <select id="role" name="role" class="form-control" required onchange="toggleRcpFields()">
+            <select id="role" name="role" class="form-control" required>
                 <option value="user">Ученик</option>
                 <option value="moderator">Модератор (Педагог)</option>
             </select>
         </div>
         
-        <!-- Поля для выбора РЦП (только для учеников) -->
-        <div id="rcpFields" style="border: 2px solid #667eea; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; background: #f8f9ff;">
-            <h3 style="color: #667eea; margin-bottom: 1rem; font-size: 1.1rem;">🤖 Настрой свою РЦП</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">Выбери имя и аватар для своего цифрового помощника, который будет сопровождать тебя в обучении!</p>
-            
-            <div class="form-group">
-                <label for="rcp_name">Имя твоей РЦП</label>
-                <input type="text" id="rcp_name" name="rcp_name" class="form-control" placeholder="Например: Алиса, Макс, Мудрик..." required>
-                <small style="color: #666;">Как ты хочешь называть своего цифрового помощника?</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="rcp_avatar">Аватар РЦП</label>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
-                    <label style="cursor: pointer; text-align: center;">
-                        <input type="radio" name="rcp_avatar" value="🦉" checked style="display: none;">
-                        <div class="avatar-option" style="font-size: 2rem; padding: 0.5rem; border: 2px solid #667eea; border-radius: 8px; transition: all 0.2s;">🦉</div>
-                        <small style="display: block; font-size: 0.7rem; color: #666;">Мудрая сова</small>
-                    </label>
-                    <label style="cursor: pointer; text-align: center;">
-                        <input type="radio" name="rcp_avatar" value="🤖" style="display: none;">
-                        <div class="avatar-option" style="font-size: 2rem; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px; transition: all 0.2s;">🤖</div>
-                        <small style="display: block; font-size: 0.7rem; color: #666;">Робот</small>
-                    </label>
-                    <label style="cursor: pointer; text-align: center;">
-                        <input type="radio" name="rcp_avatar" value="🌟" style="display: none;">
-                        <div class="avatar-option" style="font-size: 2rem; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px; transition: all 0.2s;">🌟</div>
-                        <small style="display: block; font-size: 0.7rem; color: #666;">Звезда</small>
-                    </label>
-                    <label style="cursor: pointer; text-align: center;">
-                        <input type="radio" name="rcp_avatar" value="🎯" style="display: none;">
-                        <div class="avatar-option" style="font-size: 2rem; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px; transition: all 0.2s;">🎯</div>
-                        <small style="display: block; font-size: 0.7rem; color: #666;">Цель</small>
-                    </label>
-                    <label style="cursor: pointer; text-align: center;">
-                        <input type="radio" name="rcp_avatar" value="🚀" style="display: none;">
-                        <div class="avatar-option" style="font-size: 2rem; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px; transition: all 0.2s;">🚀</div>
-                        <small style="display: block; font-size: 0.7rem; color: #666;">Ракета</small>
-                    </label>
-                    <label style="cursor: pointer; text-align: center;">
-                        <input type="radio" name="rcp_avatar" value="💡" style="display: none;">
-                        <div class="avatar-option" style="font-size: 2rem; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px; transition: all 0.2s;">💡</div>
-                        <small style="display: block; font-size: 0.7rem; color: #666;">Идея</small>
-                    </label>
-                    <label style="cursor: pointer; text-align: center;">
-                        <input type="radio" name="rcp_avatar" value="🐱" style="display: none;">
-                        <div class="avatar-option" style="font-size: 2rem; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px; transition: all 0.2s;">🐱</div>
-                        <small style="display: block; font-size: 0.7rem; color: #666;">Котик</small>
-                    </label>
-                    <label style="cursor: pointer; text-align: center;">
-                        <input type="radio" name="rcp_avatar" value="🐶" style="display: none;">
-                        <div class="avatar-option" style="font-size: 2rem; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px; transition: all 0.2s;">🐶</div>
-                        <small style="display: block; font-size: 0.7rem; color: #666;">Щенок</small>
-                    </label>
-                </div>
-            </div>
-        </div>
-        
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">Зарегистрироваться</button>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Зарегистрироваться</button>
     </form>
     
     <p style="text-align: center; margin-top: 1.5rem; color: #666;">
         Уже есть аккаунт? <a href="{{ url_for('auth.login') }}" style="color: #667eea;">Войти</a>
     </p>
 </div>
-
-<style>
-.avatar-option:hover {
-    transform: scale(1.1);
-}
-
-input[type="radio"]:checked + .avatar-option {
-    border-color: #667eea !important;
-    background: #e8ebff;
-    transform: scale(1.1);
-}
-</style>
-
-<script>
-function toggleRcpFields() {
-    const role = document.getElementById('role').value;
-    const rcpFields = document.getElementById('rcpFields');
-    const rcpNameInput = document.getElementById('rcp_name');
-    
-    if (role === 'user') {
-        rcpFields.style.display = 'block';
-        rcpNameInput.required = true;
-    } else {
-        rcpFields.style.display = 'none';
-        rcpNameInput.required = false;
-    }
-}
-
-// Инициализация при загрузке
-toggleRcpFields();
-
-// Обработка кликов по аватаркам
-document.querySelectorAll('.avatar-option').forEach(option => {
-    option.addEventListener('click', function() {
-        document.querySelectorAll('.avatar-option').forEach(o => {
-            o.style.borderColor = '#ddd';
-            o.style.background = 'transparent';
-        });
-        this.style.borderColor = '#667eea';
-        this.style.background = '#e8ebff';
-    });
-});
-</script>
 {% endblock %}

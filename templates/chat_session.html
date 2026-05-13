@@ -39,9 +39,9 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <strong>
                             {% if message.message_type == 'user_query' %}
-                                👤 Ты
+                                👤 Вы
                             {% else %}
-                                {{ current_user.rcp_avatar or '🦉' }} {{ current_user.rcp_name or 'РЦП' }}
+                                🤖 РЦП
                             {% endif %}
                         </strong>
                         <small style="color: #666;">{{ message.timestamp.strftime('%H:%M') }}</small>
@@ -97,7 +97,7 @@ document.getElementById('messageForm').addEventListener('submit', async function
     const userMsgHtml = `
         <div style="padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; background: #e3f2fd; border-left: 4px solid #2196f3;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <strong>👤 Ты</strong>
+                <strong>👤 Вы</strong>
                 <small style="color: #666;">${new Date().toLocaleTimeString()}</small>
             </div>
             <div style="white-space: pre-wrap; color: #333;">${escapeHtml(message)}</div>
@@ -120,15 +120,11 @@ document.getElementById('messageForm').addEventListener('submit', async function
         const result = await response.json();
         
         if (result.response) {
-            // Получаем имя и аватар РЦП из ответа или используем значения по умолчанию
-            const rcpName = result.rcp_info?.name || 'РЦП';
-            const rcpAvatar = result.rcp_info?.avatar || '🦉';
-            
             // Добавляем ответ ИИ в чат
             const aiMsgHtml = `
                 <div style="padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; background: #f3e5f5; border-left: 4px solid #9c27b0;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <strong>${rcpAvatar} ${rcpName}</strong>
+                        <strong>🤖 РЦП</strong>
                         <small style="color: #666;">${new Date().toLocaleTimeString()}</small>
                     </div>
                     <div style="white-space: pre-wrap; color: #333;">${escapeHtml(result.response)}</div>
