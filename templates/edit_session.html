@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование сессии - РЦП{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 900px; margin: 2rem auto;">
+    <h2 style="margin-bottom: 1.5rem; color: #667eea;">📚 Редактирование сессии: {{ session.title }}</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <!-- Информация о сессии -->
+        <div>
+            <h3 style="margin-bottom: 1rem;">Информация</h3>
+            <p><strong>Описание:</strong></p>
+            <p style="color: #666; margin-bottom: 1rem;">{{ session.description or 'Не указано' }}</p>
+            
+            <p><strong>Заданий:</strong> {{ (session.task_list | from_json | length) if session.task_list else 0 }}</p>
+            <p><strong>Статус:</strong> 
+                {% if session.is_active %}
+                    <span style="color: green;">Активна</span>
+                {% else %}
+                    <span style="color: red;">Не активна</span>
+                {% endif %}
+            </p>
+        </div>
+        
+        <!-- Загрузка файлов -->
+        <div>
+            <h3 style="margin-bottom: 1rem;">📁 Методические материалы</h3>
+            
+            <form id="uploadForm" enctype="multipart/form-data" style="margin-bottom: 1rem;">
+                <div class="form-group">
+                    <input type="file" id="file" name="file" class="form-control" accept=".pdf,.docx,.txt,.md" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Загрузить файл</button>
+            </form>
+            
+            <div id="uploadStatus" style="margin-top: 1rem;"></div>
+            
+            {% if materials %}
+                <h4 style="margin: 1rem 0 0.5rem;">Загруженные файлы:</h4>
+                <ul style="list-style: none;">
+                    {% for material in materials %}
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                            📄 {{ material.filename }}
+                            {% if material.content_processed %}
+                                <span style="color: green;">✓ Обработан</span>
+                            {% else %}
+                                <span style="color: orange;">⏳ Не обработан</span>
+                            {% endif %}
+                            <br><small style="color: #666;">{{ material.uploaded_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="color: #666;">Файлы еще не загружены</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <hr style="margin: 2rem 0;">
+    
+    <h3 style="margin-bottom: 1rem;">Список заданий</h3>
+    <div id="taskList" style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+        {% set tasks = session.task_list | from_json if session.task_list else [] %}
+        {% for task in tasks %}
+            <div style="background: white; padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; border-left: 4px solid #667eea;">
+                <strong>Задание {{ loop.index }}:</strong> {{ task.description }}<br>
+                <small style="color: #666;">🎯 Цель: {{ task.goal }}</small>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div style="margin-top: 2rem;">
+        <a href="{{ url_for('moderator.dashboard') }}" class="btn btn-secondary">← Назад к панели</a>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const statusDiv = document.getElementById('uploadStatus');
+    
+    statusDiv.innerHTML = '<p style="color: #667eea;">⏳ Загрузка файла...</p>';
+    
+    try {
+        const response = await fetch('{{ url_for("moderator.upload_material", session_id=session.id) }}', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            statusDiv.innerHTML = '<p style="color: green;">✓ ' + result.message + '</p>';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            statusDiv.innerHTML = '<p style="color: orange;">⚠ ' + result.message + '</p>';
+        }
+    } catch (error) {
+        statusDiv.innerHTML = '<p style="color: red;">✗ Ошибка загрузки: ' + error.message + '</p>';
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

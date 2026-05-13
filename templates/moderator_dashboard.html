@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Панель модератора - РЦП{% endblock %}
+
+{% block content %}
+<h1 style="color: white; margin-bottom: 2rem;">Панель модератора</h1>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+    <!-- Создание сессии -->
+    <div class="card">
+        <h3 style="margin-bottom: 1rem; color: #667eea;">📚 Мои сессии</h3>
+        
+        {% if sessions %}
+            <ul style="list-style: none;">
+                {% for session in sessions %}
+                    <li style="padding: 0.75rem 0; border-bottom: 1px solid #eee;">
+                        <strong>{{ session.title }}</strong><br>
+                        <small style="color: #666;">
+                            Заданий: {{ (session.task_list | from_json | length) if session.task_list else 0 }} |
+                            Статус: {% if session.is_active %}<span style="color: green;">Активна</span>{% else %}<span style="color: red;">Не активна</span>{% endif %}
+                        </small><br>
+                        <a href="{{ url_for('moderator.edit_session', session_id=session.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem; margin-top: 0.5rem;">Редактировать</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: #666;">У вас пока нет созданных сессий</p>
+        {% endif %}
+        
+        <a href="{{ url_for('moderator.create_session') }}" class="btn btn-success" style="width: 100%; margin-top: 1rem;">+ Создать сессию</a>
+    </div>
+    
+    <!-- Пользователи -->
+    <div class="card">
+        <h3 style="margin-bottom: 1rem; color: #667eea;">👥 Пользователи</h3>
+        
+        {% if users %}
+            <ul style="list-style: none; max-height: 400px; overflow-y: auto;">
+                {% for user in users %}
+                    <li style="padding: 0.75rem 0; border-bottom: 1px solid #eee;">
+                        <strong>{{ user.username }}</strong><br>
+                        <small style="color: #666;">
+                            Статус: 
+                            {% if user.status == 'active' %}
+                                <span style="color: green;">● Активен</span>
+                            {% elif user.status == 'blocked' %}
+                                <span style="color: red;">● Заблокирован</span>
+                            {% else %}
+                                <span style="color: orange;">● Не активен</span>
+                            {% endif %}
+                        </small><br>
+                        <a href="{{ url_for('moderator.view_user_history', user_id=user.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem; margin-top: 0.5rem;">История</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: #666;">Нет зарегистрированных пользователей</p>
+        {% endif %}
+        
+        <a href="{{ url_for('moderator.view_users') }}" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Все пользователи</a>
+    </div>
+</div>
+{% endblock %}

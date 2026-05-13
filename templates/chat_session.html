@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session.title }} - РЦП{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <!-- Заголовок и прогресс -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h2 style="color: #667eea; margin-bottom: 0.5rem;">{{ session.title }}</h2>
+        <p style="color: #666; margin-bottom: 1rem;">{{ session.description or '' }}</p>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span><strong>Задание {{ task_index + 1 }}</strong> из {{ total_tasks }}</span>
+            <div style="flex-grow: 1; margin: 0 1rem; background: #e0e0e0; height: 10px; border-radius: 5px; overflow: hidden;">
+                <div style="background: #667eea; width: {{ (task_index / total_tasks * 100) if total_tasks > 0 else 0 }}%; height: 100%; transition: width 0.3s;"></div>
+            </div>
+            <span>{{ ((task_index / total_tasks * 100) if total_tasks > 0 else 0)|round|int }}%</span>
+        </div>
+    </div>
+    
+    <!-- Текущее задание -->
+    <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #667eea;">
+        <h3 style="margin-bottom: 0.75rem;">📝 Текущее задание</h3>
+        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">{{ current_task.description }}</p>
+        <p style="color: #666;"><strong>🎯 Цель:</strong> {{ current_task.goal }}</p>
+    </div>
+    
+    <!-- Чат -->
+    <div class="card">
+        <div id="chatHistory" style="max-height: 500px; overflow-y: auto; margin-bottom: 1.5rem;">
+            {% for message in chat_history %}
+                <div style="padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; 
+                    {% if message.message_type == 'user_query' %}
+                        background: #e3f2fd; border-left: 4px solid #2196f3;
+                    {% else %}
+                        background: #f3e5f5; border-left: 4px solid #9c27b0;
+                    {% endif %}">
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <strong>
+                            {% if message.message_type == 'user_query' %}
+                                👤 Вы
+                            {% else %}
+                                🤖 РЦП
+                            {% endif %}
+                        </strong>
+                        <small style="color: #666;">{{ message.timestamp.strftime('%H:%M') }}</small>
+                    </div>
+                    
+                    <div style="white-space: pre-wrap; color: #333;">{{ message.content }}</div>
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 2rem; color: #666;">
+                    <p>Начните выполнение задания! Отправьте свой ответ ниже.</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Ввод сообщения -->
+        <form id="messageForm" style="display: flex; gap: 0.75rem;">
+            <textarea id="messageInput" class="form-control" placeholder="Введите ваш ответ на задание..." rows="3" required></textarea>
+            <button type="submit" class="btn btn-primary" id="sendBtn" style="align-self: flex-end;">
+                <span id="sendBtnText">Отправить</span>
+                <span id="sendBtnLoading" style="display: none;">⏳</span>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const sessionId = {{ session.id }};
+let isSending = false;
+
+document.getElementById('messageForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (isSending) return;
+    
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const sendBtnText = document.getElementById('sendBtnText');
+    const sendBtnLoading = document.getElementById('sendBtnLoading');
+    const chatHistory = document.getElementById('chatHistory');
+    
+    const message = messageInput.value.trim();
+    if (!message) return;
+    
+    // Блокируем кнопку отправки
+    isSending = true;
+    sendBtn.disabled = true;
+    sendBtnText.style.display = 'none';
+    sendBtnLoading.style.display = 'inline';
+    
+    // Добавляем сообщение пользователя в чат
+    const userMsgHtml = `
+        <div style="padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; background: #e3f2fd; border-left: 4px solid #2196f3;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <strong>👤 Вы</strong>
+                <small style="color: #666;">${new Date().toLocaleTimeString()}</small>
+            </div>
+            <div style="white-space: pre-wrap; color: #333;">${escapeHtml(message)}</div>
+        </div>
+    `;
+    chatHistory.insertAdjacentHTML('beforeend', userMsgHtml);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    
+    messageInput.value = '';
+    
+    try {
+        const response = await fetch(`/user/session/${sessionId}/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: message })
+        });
+        
+        const result = await response.json();
+        
+        if (result.response) {
+            // Добавляем ответ ИИ в чат
+            const aiMsgHtml = `
+                <div style="padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; background: #f3e5f5; border-left: 4px solid #9c27b0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <strong>🤖 РЦП</strong>
+                        <small style="color: #666;">${new Date().toLocaleTimeString()}</small>
+                    </div>
+                    <div style="white-space: pre-wrap; color: #333;">${escapeHtml(result.response)}</div>
+                </div>
+            `;
+            chatHistory.insertAdjacentHTML('beforeend', aiMsgHtml);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            
+            // Если задание выполнено, обновляем прогресс
+            if (result.task_completed && result.next_task) {
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else if (result.task_completed) {
+                setTimeout(() => {
+                    window.location.href = `/user/session/${sessionId}/complete`;
+                }, 2000);
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при отправке сообщения. Попробуйте еще раз.');
+    } finally {
+        isSending = false;
+        sendBtn.disabled = false;
+        sendBtnText.style.display = 'inline';
+        sendBtnLoading.style.display = 'none';
+    }
+});
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Автопрокрутка вниз при загрузке
+const chatHistory = document.getElementById('chatHistory');
+chatHistory.scrollTop = chatHistory.scrollHeight;
+</script>
+{% endblock %}

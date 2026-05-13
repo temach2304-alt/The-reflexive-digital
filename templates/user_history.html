@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}История пользователя {{ user.username }} - РЦП{% endblock %}
+
+{% block content %}
+<h1 style="color: white; margin-bottom: 2rem;">📋 История пользователя: {{ user.username }}</h1>
+
+<div class="card">
+    <div style="margin-bottom: 1.5rem;">
+        <strong>Всего сообщений:</strong> {{ messages|length }}<br>
+        <strong>Статус аккаунта:</strong> 
+        {% if user.status == 'active' %}
+            <span style="color: green;">Активен</span>
+        {% elif user.status == 'blocked' %}
+            <span style="color: red;">Заблокирован</span>
+        {% else %}
+            <span style="color: orange;">Не активен</span>
+        {% endif %}
+    </div>
+    
+    {% if messages %}
+        <div style="max-height: 600px; overflow-y: auto;">
+            {% for message in messages %}
+                <div style="padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; 
+                    {% if message.message_type == 'user_query' %}
+                        background: #e3f2fd; border-left: 4px solid #2196f3;
+                    {% else %}
+                        background: #f3e5f5; border-left: 4px solid #9c27b0;
+                    {% endif %}">
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <strong>
+                            {% if message.message_type == 'user_query' %}
+                                👤 Пользователь
+                            {% else %}
+                                🤖 РЦП
+                            {% endif %}
+                        </strong>
+                        <small style="color: #666;">
+                            {{ message.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                            {% if message.task_index is not none %}
+                                | Задание #{{ message.task_index + 1 }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    
+                    <div style="white-space: pre-wrap; color: #333;">{{ message.content }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: #666; text-align: center; padding: 2rem;">У этого пользователя пока нет истории сообщений</p>
+    {% endif %}
+</div>
+
+<a href="{{ url_for('moderator.view_users') }}" class="btn btn-secondary" style="margin-top: 1rem;">← Назад к пользователям</a>
+{% endblock %}
